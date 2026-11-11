@@ -644,6 +644,9 @@ provider / model / cwd / preset / workspace / sessionId / modes，
     支持截图、资源管理器复制的文件与文本。
 - 环境自检：`/doctor`。
 
+- **通知投递**：`auto` 在 Ghostty/WezTerm 用 OSC 777、Kitty 用 OSC 99（标题与正文分开），iTerm2/Warp 与显式 `osc9` 把标题放在正文前，其他终端响铃；实际是否弹出仍取决于终端的通知/响铃设置。OSC 777/9 对整条序列（含标题和协议字节）另加 2048 字节预算，保留完整字素。本地 Windows 的 `auto` 解析为 `windows`：任务完成 toast 首次弹出会注册当前用户的 AppUserModelID（HKCU），比任务结束晚约 3 秒（PowerShell 冷启动）；写不进去时回落到响铃。运行中 profile 的外部 DSH 通知插件已启用且处于 active 时，完成、审批与提问让位，计划评审不让位。SSH 保留所连接终端的协议，显式 `windows` 仍选择主机原生通知；tmux 的 OSC 通知需要 `set -g allow-passthrough on`，焦点报告需要 `set -g focus-events on`。
+- **`jumpBack`**（Windows，默认关闭）：开启后窗格标题末尾出现 `[dsh-tui:<16 位十六进制>]`，本进程在开启时以及每次发出通知前刷新 `~/.dsh-tui/notify/jumpback/<session>.json`（`schemaVersion: 1`、`marker`、`pid`、`startedAt`）；第一条能承诺跳回的 toast 会注册当前用户的 `HKCU\Software\Classes\dsh-tui` 协议处理器。只有发送前的探测恰好命中一个目标窗格时，toast 才带 activation URI；点击后会依次核验同一窗格、键盘焦点、标题仍含 marker、窗口在前台、未最小化，任一项失败就拒绝跳转而不是跳到别处。无法核验的布局（未选中标签中的窗格、`suppressApplicationTitle`、Windows Terminal 以外的终端）发普通 toast。探测会让每条 toast 晚约 0.5 秒，开启后的第一条还可能等 helper 编译一次（几秒；本机编译器持续失败时最多每五分钟重试一次）。正常退出会删除 marker 文件；没有其它存活实例再用这个键时，也一并删除协议键。外部发送方可读取同一个文件，并把自己的 toast 指向 `dsh-tui:activate?m=<marker>`。
+
 ### 5.5 安全模式与救援 profile（`dsh-tui safe`）
 
 dsh 意外退出时，安全模式给出**只读**的环境诊断、profile 插件清单和修复指引。
